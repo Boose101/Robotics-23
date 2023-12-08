@@ -1,3 +1,4 @@
+#endregion VEXcode Generated Robot Configuration
 #region VEXcode Generated Robot Configuration
 from vex import *
 import urandom
@@ -5,7 +6,18 @@ import urandom
 # Brain should be defined by default
 brain=Brain()
 
+
 # Robot configuration code
+left_motor_a = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
+left_motor_b = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
+left_drive_smart = MotorGroup(left_motor_a, left_motor_b)
+right_motor_a = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
+right_motor_b = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
+right_drive_smart = MotorGroup(right_motor_a, right_motor_b)
+drivetrain = DriveTrain(left_drive_smart, right_drive_smart, 319.19, 295, 40, MM, 1)
+motor_group_arm_motor_a = Motor(Ports.PORT7, GearSetting.RATIO_36_1, False)
+motor_group_arm_motor_b = Motor(Ports.PORT8, GearSetting.RATIO_36_1, True)
+motor_group_arm = MotorGroup(motor_group_arm_motor_a, motor_group_arm_motor_b)
 
 
 # wait for rotation sensor to fully initialize
@@ -22,13 +34,13 @@ def play_vexcode_sound(sound_name):
 wait(200, MSEC)
 # clear the console to make sure we don't have the REPL in the console
 print("\033[2J")
-##############
+
 
 #AUTON init
 
 #AUTON Settings
-recordInput = False
-auton = True
+recordInput = True
+auton = False
 
 autonomous_start_offset = 0
 
@@ -38,16 +50,16 @@ RECORDED_INPUT = "100:100:300"
 ##############
 
 # Create motors on ports 1 through 10
-motor_1 = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
-motor_2 = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
-# motor_3 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
-# motor_4 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, False)
-# motor_5 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
-# motor_6 = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False)
-# motor_7 = Motor(Ports.PORT7, GearSetting.RATIO_18_1, False)
+# motor_1 = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
+# # motor_2 = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
+# # motor_3 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
+# # motor_4 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, False)
+# # motor_5 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
+# # motor_6 = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False)
+# # motor_7 = Motor(Ports.PORT7, GearSetting.RATIO_18_1, False)
 # motor_8 = Motor(Ports.PORT8, GearSetting.RATIO_18_1, False)
-motor_9 = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
-motor_10 = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
+# motor_9 = Motor(Ports.PORT9, GearSetting.RATIO_18_1, False)
+# motor_10 = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
 
 # Limit switches for motor 3 and 8
 # limit_switch_3f = Limit(brain.three_wire_port.a);
@@ -60,10 +72,10 @@ controller_1 = Controller(ControllerType.PRIMARY)
 
 # Assign generic motor to more useful names here
 # We use references
-left_drive_1 = motor_1
-right_drive_1 = motor_2
-left_drive_2 = motor_9
-right_drive_2 = motor_10
+left_drive_1 = left_motor_a
+right_drive_1 = right_motor_a
+left_drive_2 = left_motor_b
+right_drive_2 = right_motor_b
 
 
 class DriveType:
@@ -83,7 +95,7 @@ class DriveType:
         return self.value == value
 
 # pick LEFT, DUAL, SPLIT or RIGHT
-drive_mode = DriveType(DriveType.LEFT)
+drive_mode = DriveType(DriveType.SPLIT)
 
 #Drive code
 
@@ -139,15 +151,15 @@ while True:
         if drive_mode == DriveType.LEFT:
             drive_left = int(controller_1.axis3.position()) + int(controller_1.axis4.position())
             drive_right = int(controller_1.axis3.position()) - int(controller_1.axis4.position())
-        # elif drive_mode == DriveType.DUAL:
-        #     drive_left = controller_1.axis3.position()
-        #     drive_right = controller_1.axis2.position()
-        # elif drive_mode == DriveType.SPLIT:
-        #     drive_left = controller_1.axis3.position() + controller_1.axis1.position()
-        #     drive_right = controller_1.axis3.position() - controller_1.axis1.position()
-        # elif drive_mode == DriveType.RIGHT:
-        #     drive_left = controller_1.axis2.position() + controller_1.axis1.position()
-        #     drive_right = controller_1.axis2.position() - controller_1.axis1.position()
+        elif drive_mode == DriveType.DUAL:
+            drive_left = controller_1.axis3.position()
+            drive_right = controller_1.axis2.position()
+        elif drive_mode == DriveType.SPLIT:
+            drive_left = controller_1.axis3.position() + controller_1.axis1.position()
+            drive_right = controller_1.axis3.position() - controller_1.axis1.position()
+        elif drive_mode == DriveType.RIGHT:
+            drive_left = controller_1.axis2.position() + controller_1.axis1.position()
+            drive_right = controller_1.axis2.position() - controller_1.axis1.position()
 
         ## Deadband allows non 0 ret to not move robbot
         deadband = 5
@@ -155,6 +167,18 @@ while True:
             drive_left = 0
         if abs(drive_right) < deadband:
             drive_right = 0
+        
+        if controller_1.buttonR1.pressing():
+            motor_group_arm.spin(FORWARD)
+            controller_1_right_shoulder_control_motors_stopped = False
+        elif controller_1.buttonR2.pressing():
+            motor_group_arm.spin(REVERSE)
+            controller_1_right_shoulder_control_motors_stopped = False
+        elif not controller_1_right_shoulder_control_motors_stopped:
+            motor_group_arm.stop()
+            # set the toggle so that we don't constantly tell the motor to stop when
+            # the buttons are released
+            controller_1_right_shoulder_control_motors_stopped = True
 
         if(recordInput and (drive_left != drive_left_cur or drive_right != drive_right_cur)):
             drive_left_cur = drive_left
@@ -171,14 +195,15 @@ while True:
             print(betweenStepTime)
 
 
-            #drive
+            #drive - drive_left, drive_right
             drive_task(drive_left, drive_right)
+            
         
     else:
         inputSplit = RECORDED_INPUT.split(":")
         # ranger = range((len(inputSplit)/3)-1)
         print(len(inputSplit))
-        for num in range(1):
+        for num in range(int(len(inputSplit)//3)):
             print("num:",num)
 
             d_left = inputSplit[3*num]
@@ -192,8 +217,7 @@ while True:
 
 def autonomous():
         inputSplit = RECORDED_INPUT.split(":")
-
-        for num in range(len(inputSplit)/3):
+        for num in range(int(len(inputSplit)//3)):
             d_left = inputSplit[3*num]
             d_right = inputSplit[3*num + 1]
             wait_time = inputSplit[3*num + 2]
@@ -201,28 +225,43 @@ def autonomous():
             wait(wait_time, MSEC)
 
 def driver_control():
-    if drive_mode == DriveType.LEFT:
-        drive_left = controller_1.axis3.position() + controller_1.axis4.position()
-        drive_right = controller_1.axis3.position() - controller_1.axis4.position()
-    elif drive_mode == DriveType.DUAL:
-        drive_left = controller_1.axis3.position()
-        drive_right = controller_1.axis2.position()
-    elif drive_mode == DriveType.SPLIT:
-        drive_left = controller_1.axis3.position() + controller_1.axis1.position()
-        drive_right = controller_1.axis3.position() - controller_1.axis1.position()
-    elif drive_mode == DriveType.RIGHT:
-        drive_left = controller_1.axis2.position() + controller_1.axis1.position()
-        drive_right = controller_1.axis2.position() - controller_1.axis1.position()
+    controller_1_right_shoulder_control_motors_stopped = True
+    while True:
+        if drive_mode == DriveType.LEFT:
+            drive_left = controller_1.axis3.position() + controller_1.axis4.position()
+            drive_right = controller_1.axis3.position() - controller_1.axis4.position()
+        elif drive_mode == DriveType.DUAL:
+            drive_left = controller_1.axis3.position()
+            drive_right = controller_1.axis2.position()
+        elif drive_mode == DriveType.SPLIT:
+            drive_left = controller_1.axis3.position() + controller_1.axis1.position()
+            drive_right = controller_1.axis3.position() - controller_1.axis1.position()
+        elif drive_mode == DriveType.RIGHT:
+            drive_left = controller_1.axis2.position() + controller_1.axis1.position()
+            drive_right = controller_1.axis2.position() - controller_1.axis1.position()
 
-## Deadband allows non 0 ret to not move robbot
-deadband = 5
-if abs(drive_left) < deadband:
-    drive_left = 0
-if abs(drive_right) < deadband:
-    drive_right = 0
+        if controller_1.buttonR1.pressing():
+            motor_group_arm.spin(FORWARD)
+            controller_1_right_shoulder_control_motors_stopped = False
+        elif controller_1.buttonR2.pressing():
+            motor_group_arm.spin(REVERSE)
+            controller_1_right_shoulder_control_motors_stopped = False
+        elif not controller_1_right_shoulder_control_motors_stopped:
+            motor_group_arm.stop()
+            # set the toggle so that we don't constantly tell the motor to stop when
+            # the buttons are released
+            controller_1_right_shoulder_control_motors_stopped = True
 
-## Drive
-drive_task(drive_left, drive_right)
+        ## Deadband allows non 0 ret to not move robbot
+        deadband = 5
+        if abs(drive_left) < deadband:
+            drive_left = 0
+        if abs(drive_right) < deadband:
+            drive_right = 0
+
+
+        ## Drive
+        drive_task(drive_left, drive_right)
 
 
 
@@ -312,27 +351,27 @@ def display_task():
     brain.screen.set_pen_color(Color.RED)
     brain.screen.print_at("TEST DRIVE CODE", x=90, y=160)
 
-    motors = [motor_1,
-              motor_2,
-            #   motor_3,
-            #   motor_4,
-            #   motor_5,
-            #   motor_6,
-            #   motor_7,
-            #   motor_8,
-              motor_9,
-              motor_10]
+    # motors = [motor_1,
+    #         #   motor_2,
+    #         #   motor_3,
+    #         #   motor_4,
+    #         #   motor_5,
+    #         #   motor_6,
+    #         #   motor_7,
+    #           motor_8,
+    #           motor_9,
+    #           motor_10]
 
-    while True:
-        index = 0
-        for m in motors:
-            displayMotorData(m, index)
-            index = index+1
+    # while True:
+    #     index = 0
+    #     for m in motors:
+    #         displayMotorData(m, index)
+    #         index = index+1
 
-        # display using back buffer, stops flickering
-        brain.screen.render()
+    #     # display using back buffer, stops flickering
+    #     brain.screen.render()
 
-        sleep(10)
+    #     sleep(10)
 
 # Run the drive code
 drive = Thread(drive_task)
