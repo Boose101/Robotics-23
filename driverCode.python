@@ -6,10 +6,6 @@ import urandom
 brain=Brain()
 
 # Robot configuration code
-controller_1 = Controller(PRIMARY)
-left_drive_smart = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
-right_drive_smart = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
-drivetrain = DriveTrain(left_drive_smart, right_drive_smart, 319.19, 295, 40, MM, 1)
 
 
 # wait for rotation sensor to fully initialize
@@ -26,44 +22,18 @@ def play_vexcode_sound(sound_name):
 wait(200, MSEC)
 # clear the console to make sure we don't have the REPL in the console
 print("\033[2J")
-
-#endregion VEXcode Generated Robot Configuration
-#region VEXcode Generated Robot Configuration
-from vex import *
-import urandom
-
-# Brain should be defined by default
-brain=Brain()
-
-# Robot configuration code
-
-
-# wait for rotation sensor to fully initialize
-wait(30, MSEC)
-
-
-def play_vexcode_sound(sound_name):
-    # Helper to make playing sounds from the V5 in VEXcode easier and
-    # keeps the code cleaner by making it clear what is happening.
-    print("VEXPlaySound:" + sound_name)
-    wait(5, MSEC)
-
-# add a small delay to make sure we don't print in the middle of the REPL header
-wait(200, MSEC)
-# clear the console to make sure we don't have the REPL in the console
-print("\033[2J")
-
 ##############
 
 #AUTON init
 
+#AUTON Settings
 recordInput = False
+auton = True
 
 autonomous_start_offset = 0
-first_record = True
 
 #Paste recorded input here:
-RECORDED_INPUT = ""
+RECORDED_INPUT = "100:100:300"
 
 ##############
 
@@ -115,40 +85,7 @@ class DriveType:
 # pick LEFT, DUAL, SPLIT or RIGHT
 drive_mode = DriveType(DriveType.LEFT)
 
-# Max motor speed (percent) for motors controlled by buttons
-MAX_SPEED = 50
-
-#-----------------------------------------------------------------------------*/
-#   @brief  Drive task                                                        */
-#-----------------------------------------------------------------------------*/
-#
-# All motors are controlled from this function which is run as a separate thread
-#
-
-while True:
-    if drive_mode == DriveType.LEFT:
-        drive_left = controller_1.axis3.position() + controller_1.axis4.position()
-        drive_right = controller_1.axis3.position() - controller_1.axis4.position()
-    elif drive_mode == DriveType.DUAL:
-        drive_left = controller_1.axis3.position()
-        drive_right = controller_1.axis2.position()
-    elif drive_mode == DriveType.SPLIT:
-        drive_left = controller_1.axis3.position() + controller_1.axis1.position()
-        drive_right = controller_1.axis3.position() - controller_1.axis1.position()
-    elif drive_mode == DriveType.RIGHT:
-        drive_left = controller_1.axis2.position() + controller_1.axis1.position()
-        drive_right = controller_1.axis2.position() - controller_1.axis1.position()
-
-    ## Deadband allows non 0 ret to not move robbot
-    deadband = 5
-    if abs(drive_left) < deadband:
-        drive_left = 0
-    if abs(drive_right) < deadband:
-        drive_right = 0
-
-    drive_task(drive_left, drive_right)
-
-
+#Drive code
 
 def drive_task(drive_left, drive_right):
     # drive_m_3 = (controller_1.buttonL1.pressing() - controller_1.buttonL2.pressing()) * MAX_SPEED
@@ -179,6 +116,118 @@ def drive_task(drive_left, drive_right):
     # motor_6.spin(FORWARD, drive_m_6, PERCENT)
     # motor_7.spin(FORWARD, drive_m_7, PERCENT)
     # motor_8.spin(FORWARD, drive_m_8, PERCENT)
+
+# Max motor speed (percent) for motors controlled by buttons
+MAX_SPEED = 50
+
+#-----------------------------------------------------------------------------*/
+#   @brief  Drive task                                                        */
+#-----------------------------------------------------------------------------*/
+#
+# All motors are controlled from this function which is run as a separate thread
+#
+
+drive_left_cur = 0
+drive_right_cur = 0
+
+brainPrevStepTime = int(brain.timer.time(MSEC))
+betweenStepTime = 0
+
+
+while True:
+    if(not auton):
+        if drive_mode == DriveType.LEFT:
+            drive_left = int(controller_1.axis3.position()) + int(controller_1.axis4.position())
+            drive_right = int(controller_1.axis3.position()) - int(controller_1.axis4.position())
+        # elif drive_mode == DriveType.DUAL:
+        #     drive_left = controller_1.axis3.position()
+        #     drive_right = controller_1.axis2.position()
+        # elif drive_mode == DriveType.SPLIT:
+        #     drive_left = controller_1.axis3.position() + controller_1.axis1.position()
+        #     drive_right = controller_1.axis3.position() - controller_1.axis1.position()
+        # elif drive_mode == DriveType.RIGHT:
+        #     drive_left = controller_1.axis2.position() + controller_1.axis1.position()
+        #     drive_right = controller_1.axis2.position() - controller_1.axis1.position()
+
+        ## Deadband allows non 0 ret to not move robbot
+        deadband = 5
+        if abs(drive_left) < deadband:
+            drive_left = 0
+        if abs(drive_right) < deadband:
+            drive_right = 0
+
+        if(recordInput and (drive_left != drive_left_cur or drive_right != drive_right_cur)):
+            drive_left_cur = drive_left
+            drive_right_cur = drive_right
+
+            ####Auton
+            ##time setup
+            betweenStepTime = int(brain.timer.time(MSEC)) - brainPrevStepTime
+            brainPrevStepTime = int(brain.timer.time(MSEC))
+
+            ##printing
+            # driveWord = drive_left + ":" + drive_right
+            print(drive_left, drive_right, end=":", sep=":")
+            print(betweenStepTime)
+
+
+            #drive
+            drive_task(drive_left, drive_right)
+        
+    else:
+        inputSplit = RECORDED_INPUT.split(":")
+        # ranger = range((len(inputSplit)/3)-1)
+        print(len(inputSplit))
+        for num in range(1):
+            print("num:",num)
+
+            d_left = inputSplit[3*num]
+            print(d_left)
+            d_right = inputSplit[3*num + 1]
+            print(d_right)
+            wait_time = int(inputSplit[3*num + 2])
+            print(wait_time)
+
+            wait(wait_time, MSEC)
+
+def autonomous():
+        inputSplit = RECORDED_INPUT.split(":")
+
+        for num in range(len(inputSplit)/3):
+            d_left = inputSplit[3*num]
+            d_right = inputSplit[3*num + 1]
+            wait_time = inputSplit[3*num + 2]
+            drive_task(d_left, d_right)            
+            wait(wait_time, MSEC)
+
+def driver_control():
+    if drive_mode == DriveType.LEFT:
+        drive_left = controller_1.axis3.position() + controller_1.axis4.position()
+        drive_right = controller_1.axis3.position() - controller_1.axis4.position()
+    elif drive_mode == DriveType.DUAL:
+        drive_left = controller_1.axis3.position()
+        drive_right = controller_1.axis2.position()
+    elif drive_mode == DriveType.SPLIT:
+        drive_left = controller_1.axis3.position() + controller_1.axis1.position()
+        drive_right = controller_1.axis3.position() - controller_1.axis1.position()
+    elif drive_mode == DriveType.RIGHT:
+        drive_left = controller_1.axis2.position() + controller_1.axis1.position()
+        drive_right = controller_1.axis2.position() - controller_1.axis1.position()
+
+## Deadband allows non 0 ret to not move robbot
+deadband = 5
+if abs(drive_left) < deadband:
+    drive_left = 0
+if abs(drive_right) < deadband:
+    drive_right = 0
+
+## Drive
+drive_task(drive_left, drive_right)
+
+
+
+
+
 
 
 
@@ -290,5 +339,3 @@ drive = Thread(drive_task)
 
 # Run the display code
 display = Thread(display_task)
-
-# Python now drops into REPL
