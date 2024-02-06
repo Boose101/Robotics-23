@@ -77,7 +77,8 @@ auton = False
 autonomous_start_offset = 0
 
 #Paste recorded input here:
-RECORDED_INPUT = "100:100:300"
+DRIVE_RECORDED_INPUT = "100:100:300"
+ARM_RECORDED_INPUT = "True:True:False:174"
 
 ##############
 #This determines which style of driving is picked
@@ -244,7 +245,7 @@ def motor_task(drive_left, drive_right):
                 #drive - drive_left, drive_right
                 motor_task(drive_left, drive_right)
             
-            if(recordInput and (arm_control_group_cur != arm_motor_group_motors_stopped or arm_control_1 != arm_motor_a_control_motors_stopped or arm_control_2 != arm_motor_b_control_motors_stopped)):
+            if(recordInput and (arm_control_group_cur != arm_motor_group_motors_stopped or arm_control_1_cur != arm_motor_a_control_motors_stopped or arm_control_2_cur != arm_motor_b_control_motors_stopped)):
                 arm_control_group_cur = arm_motor_group_motors_stopped
                 arm_control_1_cur = arm_motor_a_control_motors_stopped
                 arm_control_2_cur = arm_motor_b_control_motors_stopped
@@ -268,11 +269,11 @@ def motor_task(drive_left, drive_right):
             for num in range(int(len(drive_inputSplit)//3)):
                 print("num:",num)
 
-                d_left = inputSplit[3*num]
+                d_left = drive_inputSplit[3*num]
                 print(d_left)
-                d_right = inputSplit[3*num + 1]
+                d_right = drive_inputSplit[3*num + 1]
                 print(d_right)
-                wait_time = int(inputSplit[3*num + 2])
+                wait_time = int(drive_inputSplit[3*num + 2])
                 print(wait_time)
 
                 wait(wait_time, MSEC)
