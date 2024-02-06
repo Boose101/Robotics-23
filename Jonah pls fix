@@ -259,10 +259,13 @@ def motor_task(drive_left, drive_right):
                 
             
         else:
-            inputSplit = RECORDED_INPUT.split(":")
-            # ranger = range((len(inputSplit)/3)-1)
-            print(len(inputSplit))
-            for num in range(int(len(inputSplit)//3)):
+            drive_inputSplit = DRIVE_RECORDED_INPUT.split(":")
+            arm_inputSplit = ARM_RECORDED_INPUT.split(":")
+            print("Drive: ", len(drive_inputSplit))
+            print("Arm: ", len(arm_inputSplit))
+
+
+            for num in range(int(len(drive_inputSplit)//3)):
                 print("num:",num)
 
                 d_left = inputSplit[3*num]
@@ -273,6 +276,22 @@ def motor_task(drive_left, drive_right):
                 print(wait_time)
 
                 wait(wait_time, MSEC)
+
+            for num in range(int(len(arm_inputSplit)//4)):
+                print("num:",num)
+
+                arm_group = arm_inputSplit[3*num]
+                print(arm_group)
+                arm_a = arm_inputSplit[3*num + 1]
+                print(arm_a)
+                arm_b = arm_inputSplit[3*num + 2]
+                print(arm_b)
+                wait_time = int(arm_inputSplit[3*num + 3])
+                print(wait_time)
+
+                wait(wait_time, MSEC)
+
+    
 # This is our attempt at Autonomous it does not work yet 
 def autonomous():
         '''inputSplit = RECORDED_INPUT.split(":")
